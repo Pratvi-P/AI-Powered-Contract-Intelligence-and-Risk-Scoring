@@ -1,0 +1,22 @@
+SERVICE AGREEMENT
+This Service Agreement ("Agreement") is entered into on January 15, 2026, between ABC
+Technologies Pvt Ltd ("Service Provider") and XYZ Retail Pvt Ltd ("Client").
+1. Scope of Services The Service Provider agrees to develop and maintain a web-based inventory
+management system for the Client.
+2. Payment Terms The Client agrees to pay a total amount of Rs. 5,00,000. Payment shall be made
+in three installments: - 40% advance payment before project commencement. - 30% after
+completion of the development phase. - 30% after final delivery and acceptance.
+3. Confidentiality Both parties agree to keep all confidential information, business data, and
+technical documents private and not disclose them to any third party.
+4. Project Duration The project shall start on February 1, 2026, and is expected to be completed by
+June 30, 2026.
+5. Termination Either party may terminate this Agreement by providing a written notice of 30 days to
+the other party.
+6. Liability The Service Provider shall not be liable for any indirect, incidental, or consequential
+damages arising from the use of the delivered software.
+7. Governing Law This Agreement shall be governed by the laws of India.
+Authorized Signatories
+ABC Technologies Pvt Ltd XYZ Retail Pvt Ltd
+
+Authorized Signature Authorized Signature
+
