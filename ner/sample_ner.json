@@ -1,0 +1,81 @@
+{
+  "source_file": "sample.pdf",
+  "num_pages": 1,
+  "total_chars": 1349,
+  "entity_summary": {
+    "organizations": [
+      "ABC",
+      "XYZ Retail Pvt Ltd",
+      "Scope of Services The Service Provider",
+      "Project Duration",
+      "Liability The Service Provider",
+      "Authorized Signatories ABC Technologies Pvt Ltd"
+    ],
+    "dates": [
+      "January 15, 2026",
+      "February 1, 2026",
+      "June 30, 2026",
+      "30 days"
+    ],
+    "locations": [
+      "Client",
+      "India"
+    ]
+  },
+  "all_entities": {
+    "DATE": [
+      {
+        "text": "January 15, 2026",
+        "count": 1
+      },
+      {
+        "text": "February 1, 2026",
+        "count": 1
+      },
+      {
+        "text": "June 30, 2026",
+        "count": 1
+      },
+      {
+        "text": "30 days",
+        "count": 1
+      }
+    ],
+    "ORG": [
+      {
+        "text": "ABC",
+        "count": 1
+      },
+      {
+        "text": "XYZ Retail Pvt Ltd",
+        "count": 1
+      },
+      {
+        "text": "Scope of Services The Service Provider",
+        "count": 1
+      },
+      {
+        "text": "Project Duration",
+        "count": 1
+      },
+      {
+        "text": "Liability The Service Provider",
+        "count": 1
+      },
+      {
+        "text": "Authorized Signatories ABC Technologies Pvt Ltd",
+        "count": 1
+      }
+    ],
+    "GPE": [
+      {
+        "text": "Client",
+        "count": 1
+      },
+      {
+        "text": "India",
+        "count": 1
+      }
+    ]
+  }
+}
