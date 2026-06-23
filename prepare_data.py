@@ -1,28 +1,4 @@
-"""
-Week 2 - Day 1-2 (of the Transformer Fine-Tuning block): Prepare CUAD data.
 
-CUAD is natively a question-answering dataset: for each of 41 legal clause
-categories, it gives a "question" and the answer span(s) inside a contract.
-To fine-tune a classifier instead of a QA model, this script:
-
-  1. Downloads the official CUAD v1 data.zip directly from the Atticus
-     Project's GitHub repo (NOT via the Hugging Face `datasets` library --
-     that route has repeated version-compatibility problems with this
-     particular dataset, since recent `datasets` releases dropped support
-     for script-based dataset loading entirely).
-  2. Parses CUADv1.json (standard SQuAD 2.0-style format).
-  3. Splits each contract into overlapping text chunks (~paragraph sized).
-  4. Labels each chunk with every clause category whose answer span falls
-     inside it -> a multi-label classification example.
-  5. Splits chunks into train/validation/test BY CONTRACT (not by chunk)
-     so no contract's text leaks across splits.
-
-Output: data/train.jsonl, data/validation.jsonl, data/test.jsonl,
-        data/categories.json (the 41 label names, in label order)
-
-Usage:
-    python prepare_data.py --output_dir ./data --chunk_words 200 --stride_words 100
-"""
 
 import argparse
 import json
@@ -38,9 +14,7 @@ CUAD_ZIP_URL = "https://github.com/TheAtticusProject/cuad/raw/main/data.zip"
 
 
 def get_category_name(question: str) -> str:
-    """CUAD questions look like:
-    'Highlight the parts (if any) of this contract related to "Document Name" ...'
-    Pull out the quoted category name to use as a clean label."""
+
     match = re.search(r'"([^"]+)"', question)
     if match:
         return match.group(1).strip()
@@ -48,8 +22,7 @@ def get_category_name(question: str) -> str:
 
 
 def build_chunks(context: str, chunk_words: int, stride_words: int):
-    """Split a contract's full text into overlapping word-level chunks.
-    Returns list of (start_char, end_char, chunk_text)."""
+
     words = [(m.start(), m.end()) for m in re.finditer(r"\S+", context)]
     if not words:
         return []
@@ -68,7 +41,6 @@ def build_chunks(context: str, chunk_words: int, stride_words: int):
 
 
 def download_cuad(raw_cache_dir: str) -> str:
-    """Download + extract CUADv1.json if not already cached locally."""
     os.makedirs(raw_cache_dir, exist_ok=True)
     json_path = os.path.join(raw_cache_dir, "CUADv1.json")
 
@@ -110,7 +82,7 @@ def main():
     with open(json_path, encoding="utf-8") as f:
         raw = json.load(f)
 
-    # CUADv1.json is SQuAD-2.0-style: data -> [ {title, paragraphs: [{context, qas}]} ]
+
     contracts = {}  # title -> {"context": str, "spans": {category: [(start,end),...]}}
     categories = set()
 
@@ -124,9 +96,6 @@ def main():
             for qa in para["qas"]:
                 category = get_category_name(qa["question"])
                 categories.add(category)
-                # Unanswerable questions (is_impossible=True) simply have no
-                # answers -> that category contributes no positive span, which
-                # is exactly the label we want for "this clause isn't present".
                 for ans in qa.get("answers", []):
                     text = ans.get("text", "")
                     start = ans.get("answer_start")

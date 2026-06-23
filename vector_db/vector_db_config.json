@@ -1,0 +1,7 @@
+{
+  "pinecone_index_name": "contract-intelligence",
+  "embedding_model": "all-MiniLM-L6-v2",
+  "embedding_dim": 384,
+  "total_vectors": 32242,
+  "note": "Store PINECONE_API_KEY as an environment variable, never hardcode it"
+}

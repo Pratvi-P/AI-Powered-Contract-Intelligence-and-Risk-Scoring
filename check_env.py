@@ -1,13 +1,3 @@
-"""
-Week 2 - Day 1: Environment check.
-
-Run this first to confirm your GPU and library versions are ready
-for transformer fine-tuning.
-
-Usage:
-    python check_env.py
-"""
-
 import sys
 
 
