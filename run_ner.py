@@ -1,5 +1,5 @@
 """
-Day 3: Named Entity Recognition (NER) on Contract Text
+Named Entity Recognition (NER) on Contract Text
 
 Uses spaCy's pre-trained English model to automatically extract key entities
 from contract text:
