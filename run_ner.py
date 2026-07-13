@@ -10,12 +10,12 @@ from contract text:
   - PERSON     -> individual names
   - LAW        -> references to legal documents/acts
 
-This runs on the JSON files produced by extract_pdf_text.py (Day 2).
+This runs on the JSON files produced by extract_pdf_text.py.
 Each contract gets a matching output JSON with all found entities.
 
 How it fits the project:
   PDF -> extract_pdf_text.py -> plain text -> run_ner.py -> entities JSON
-  The entities become searchable metadata in the FastAPI app (Day 8).
+  The entities become searchable metadata in the FastAPI app.
   E.g. "show me all contracts mentioning more than $1M" or
   "find contracts expiring before 2026" become possible.
 
