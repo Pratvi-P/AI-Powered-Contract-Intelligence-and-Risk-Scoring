@@ -1,95 +1,161 @@
-# Week 2, Day 1-4: Transformer Fine-Tuning on CUAD
+# AI-Powered Contract Intelligence & Risk Scoring
 
-Fine-tunes a pre-trained transformer (Legal-BERT / RoBERTa) to classify
-which legal clause categories appear in a contract paragraph. Deliverable:
-a fine-tuned clause classification model.
+An end-to-end NLP system that automatically analyzes legal contracts — extracting entities, detecting clause types, and enabling semantic search across a contract database.
 
-## How CUAD was adapted
+---
 
-CUAD is natively a **question-answering** dataset: 41 clause categories,
-each phrased as a question, with answer spans inside full contract texts.
-To get a **classifier** (matching your timetable), `prepare_data.py`:
+## What it does
 
-1. Downloads CUAD from the Hugging Face Hub.
-2. Splits each contract into overlapping ~200-word chunks.
-3. Labels each chunk with every category whose answer span falls inside it
-   → a multi-label classification example (a chunk can match 0, 1, or
-   several categories at once).
-4. Splits chunks into train/validation/test **by contract**, so the same
-   contract never appears in two splits.
+Upload any contract PDF and the system returns:
+- **Named entities** — company names, dates, monetary values, locations
+- **Clause detection** — which of 41 legal clause types are present (Governing Law, Termination, Audit Rights, etc.)
+- **Semantic search** — top 5 most similar contracts from a 32,000-paragraph database
 
-## Setup
+---
 
+## Architecture
+
+```
+PDF Upload
+    ↓
+extract_pdf_text.py     → plain text extraction (PyMuPDF)
+    ↓
+run_ner.py              → named entity recognition (spaCy)
+    ↓
+Legal-BERT model        → clause classification (fine-tuned transformer)
+    ↓
+Pinecone vector DB      → semantic similarity search
+    ↓
+FastAPI (/analyze)      → single JSON response
+```
+
+---
+
+## Project Structure
+
+```
+├── src/
+│   ├── main.py             # FastAPI app — all endpoints
+│   ├── pipeline.py         # ties all components together
+│   ├── classifier.py       # clause classification
+│   └── search.py           # Pinecone semantic search
+├── evaluation/
+│   ├── per_category_results.json   # per-category F1 scores
+│   ├── thresholds.json             # tuned confidence thresholds
+│   └── categories.json             # 41 clause category names
+├── vector_db/
+│   └── vector_db_config.json       # Pinecone index config
+├── prepare_data.py         # downloads + processes CUAD dataset
+├── extract_pdf_text.py     # PDF text extraction pipeline
+├── run_ner.py              # NER on contract text
+├── finetune.ipynb          # Legal-BERT fine-tuning (Colab)
+├── day6_evaluation.ipynb   # model evaluation + threshold tuning (Colab)
+├── day7_vectordb.ipynb     # embeddings + Pinecone upload (Colab)
+├── load_test.py            # Locust load testing
+├── Dockerfile              # container definition
+├── docker-compose.yml      # container orchestration
+├── requirements.txt        # ML/data dependencies
+├── requirements_api.txt    # API dependencies
+└── .env.example            # environment variables template
+```
+
+---
+
+## Setup & Running
+
+### 1. Clone the repo
 ```bash
+git clone https://github.com/<your-username>/AI-Powered-Contract-Intelligence-and-Risk-Scoring.git
+cd AI-Powered-Contract-Intelligence-and-Risk-Scoring
+```
+
+### 2. Create virtual environment
+```bash
+python -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-python check_env.py          # confirms GPU + library versions
+pip install -r requirements_api.txt
+python -m spacy download en_core_web_sm
 ```
 
-## Step 1 — Prepare the data (Day 1-2)
-
+### 3. Set environment variables
 ```bash
-python prepare_data.py --output_dir ./data
+cp .env.example .env
+# Edit .env and add your Pinecone API key
 ```
 
-This downloads CUAD (~100MB, cached after first run) and writes:
-- `data/train.jsonl`, `data/validation.jsonl`, `data/test.jsonl`
-- `data/categories.json` — the 41 label names, in label order
-
-Expect roughly an 80/10/10 contract split. Most chunks will have **no**
-clause label (they're just background contract text) — that's expected;
-CUAD's true clauses are sparse. You'll deal with this imbalance more
-deliberately in the Day 5-7 evaluation task.
-
-## Step 2 — Fine-tune (Day 3-4)
-
+### 4. Start the API
 ```bash
-python train_classifier.py \
-    --data_dir ./data \
-    --model_name nlpaueb/legal-bert-base-uncased \
-    --output_dir ./outputs/model \
-    --epochs 3 \
-    --batch_size 8
+uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Outputs:
-- `outputs/model/final/` — the fine-tuned model + tokenizer
-- `outputs/model/test_metrics.json` — micro/macro F1, precision, recall
+### 5. Open Swagger UI
+```
+http://localhost:8000/docs
+```
 
-### Model choices (`--model_name`)
-| Model | Notes |
+---
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/health` | Health check |
+| GET | `/categories` | List all 41 clause categories |
+| POST | `/analyze` | Upload PDF, get full analysis |
+| POST | `/search` | Semantic contract search |
+
+---
+
+## Model Performance
+
+Trained on the CUAD dataset (510 legal contracts, 41 clause categories).
+
+| Metric | Default Threshold | Tuned Threshold |
+|---|---|---|
+| F1 Micro | 0.670 | **0.697** |
+| Precision | 0.787 | 0.755 |
+| Recall | 0.583 | 0.647 |
+
+**Best performing categories:**
+- Governing Law: F1 = 0.923
+- Insurance: F1 = 0.878
+- Parties: F1 = 0.843
+
+**Weak categories** (limited training examples):
+- Most Favored Nation, Source Code Escrow, Third Party Beneficiary
+
+---
+
+## Technology Stack
+
+| Component | Technology |
 |---|---|
-| `nlpaueb/legal-bert-base-uncased` | Legal-domain BERT, recommended default |
-| `roberta-base` | Strong general-purpose baseline |
-| `saibo/legal-roberta-base` | Legal-domain RoBERTa |
-| `distilbert-base-uncased` | ~2x faster, lower VRAM, slightly lower accuracy |
+| NLP Model | Legal-BERT (nlpaueb/legal-bert-base-uncased) |
+| NER | spaCy en_core_web_sm |
+| PDF Extraction | PyMuPDF |
+| Vector Database | Pinecone |
+| Embeddings | all-MiniLM-L6-v2 |
+| API Framework | FastAPI + Uvicorn |
+| Training Dataset | CUAD (Contract Understanding Atticus Dataset) |
+| Training Platform | Google Colab (T4 GPU) |
+| Containerization | Docker |
 
-### If you hit GPU out-of-memory
-- Lower `--batch_size` (e.g. 4) and raise `--grad_accum_steps` (e.g. 4) —
-  same effective batch size, less memory.
-- Lower `--max_length` (e.g. 128) — shorter chunks use less memory.
-- Try `distilbert-base-uncased` instead of a full BERT/RoBERTa model.
+---
 
-### Expected runtime
-On a single mid-range GPU (e.g. RTX 3060/4060, 8-12GB VRAM), expect
-roughly 20-60 minutes for 3 epochs depending on dataset size and model.
-On CPU only, this could take many hours — consider `--epochs 1` and a
-smaller `--max_length` for a first sanity-check run.
+## Known Limitations
 
-## What's next (Day 5-7, not in this script)
+- Classifier runs in mock mode without HF_TOKEN and HF_MODEL_URL configured
+- OCR for scanned PDFs requires Tesseract binary (not installed by default)
+- 9 clause categories score below F1=0.3 due to limited training examples
+- Model loaded from Hugging Face Hub (requires internet connection)
 
-Per your timetable, Day 5-7 covers **Model Evaluation & Heuristics**:
-digging into per-category precision/recall (some of the 41 categories
-have very few examples), tuning the classification threshold per
-category instead of one global 0.5, and adding post-processing rules to
-improve confidence scoring. This script intentionally stops at a solid
-baseline fine-tuned model + basic test metrics so that work has
-something concrete to evaluate.
+---
 
-## Files in this delivery
+## Future Improvements
 
-| File | Purpose |
-|---|---|
-| `check_env.py` | Verify GPU/library setup |
-| `prepare_data.py` | Download CUAD, build the chunked classification dataset |
-| `train_classifier.py` | Fine-tune the transformer, save model + metrics |
-| `requirements.txt` | Python dependencies |
+- Fine-tune on more examples for weak categories
+- Add per-category threshold tuning at inference time
+- Build a frontend UI for non-technical users
+- Add async inference with Celery for large documents
+- Set up monitoring and logging (Prometheus + Grafana)
